@@ -2,6 +2,8 @@ package com.example.mall.service;
 
 import com.example.mall.entity.Order;
 import com.example.mall.mapper.OrderMapper;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 /**
@@ -38,9 +40,16 @@ public class PromotionShipService {
      */
     public void recalculatePaidAmount(Long orderId, double discountRate) {
         Order order = orderMapper.selectById(orderId);
-        double amountYuan = order.getAmount() / 100.0;
-        double paidYuan = amountYuan * discountRate;
-        long paidFen = (long) (paidYuan * 100);
+        // 金额以「分」为单位整型存储，折算必须留在精确十进制域内。原实现有两个独立的
+        // 错误，都只少算、从不多算，因此长期下来是系统性地少收钱：
+        //   1. 先除以 100 转成元、用 double 乘、再乘回 100，两次转换各带一次二进制舍入。
+        //      100 分打 0.29 折，double 算出的是 28.999999999999996。
+        //   2. (long) 是截断而非四舍五入。1990 分打 85 折应为 1691.5，截断成 1691。
+        // 这两处各差一分，且都朝同一个方向。BigDecimal 让乘法精确，收尾只舍入一次。
+        long paidFen = BigDecimal.valueOf(order.getAmount())
+                .multiply(BigDecimal.valueOf(discountRate))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
         orderMapper.updatePaidAmount(orderId, paidFen);
     }
 
