@@ -52,6 +52,13 @@ public class Order {
         this.status = status;
     }
 
+    public void setId(Long id) { this.id = id; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setPayStatus(String payStatus) { this.payStatus = payStatus; }
+    public void setAmount(long amount) { this.amount = amount; }
+    public void setReceiverPhone(String receiverPhone) { this.receiverPhone = receiverPhone; }
+    public void setReceiverAddress(String receiverAddress) { this.receiverAddress = receiverAddress; }
+
     public void setPaidAmount(long paidAmount) {
         this.paidAmount = paidAmount;
     }
